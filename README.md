@@ -1,6 +1,5 @@
-Ansible
--------
+#Default Rate Prediction for P2P Loans
 
+There are 3 different folders in this repository:
 
-This project wraps my efforts towards learning Ansible. Following are the tasks that I have accomplished so far using Ansible playbooks:
-- Setup SFTP server on AWS
+1. The 
