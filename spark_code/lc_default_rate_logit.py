@@ -8,6 +8,6 @@ def labelData(data):
     return data.map(lambda row: LabeledPoint(row[0], row[1:]))
 
 training_data, testing_data = labelData(df.rdd).randomSplit([0.8, 0.2])
-logit_model = LogisticRegressionModel.train(training_data, regParam=0.3)
+logit_model = LogisticRegressionWithLBFGS.train(training_data, regParam=0.3)
 labels_and_preds = testing_data.map(lambda p: (p.label, logit_model.predict(p.features)))
 test_accuracy = labels_and_preds.filter(lambda (v, p): v == p).count() / float(testing_data.count())
