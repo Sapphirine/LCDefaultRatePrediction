@@ -1,0 +1,51 @@
+- name: Install pre-requisites packages
+  apt: pkg={{ item }} state=installed update_cache=yes
+  with_items:
+    - wget
+    - tar
+    - gzip
+    - unzip
+    - openjdk-7-jdk
+    - git
+    - postgresql
+    - python-psycopg2
+    - build-essential
+    - gfortran
+    - libpq-dev
+    - libncurses5-dev
+    - libffi-dev
+    - libopenblas-dev
+    - liblapack-dev
+    - locales
+    - python-dev
+    - python-pip
+    - rsync
+    - uwsgi
+    - uwsgi-plugin-python
+
+- name: Install pexpect package
+  pip: name=pexpect
+
+- name: Download scala
+  get_url: url={{ scala_download_url }} dest="/home/ubuntu/"
+
+- name: Install scala
+  apt: deb="/home/ubuntu/scala-{{ scala_version }}.deb"
+
+- name: Delete a virtualenv directory if exists
+  file: path=/home/ubuntu/venvs state=absent
+
+- name: Install virtualenv
+  pip:  name=virtualenv
+
+- name: Copy requirements file
+  copy: src={{ requirements_path }} dest=/home/ubuntu/
+
+- name: Copy scientific requirements
+  copy: src={{ scientific_requirements_path }} dest=/home/ubuntu/
+
+- name: Install python requirements
+  pip:  requirements=/home/ubuntu/requirements.txt virtualenv=/home/ubuntu/venvs/iris
+
+- name: Install python scientific requirements
+  pip:  requirements=/home/ubuntu/scientific_requirements.txt virtualenv=/home/ubuntu/venvs/iris

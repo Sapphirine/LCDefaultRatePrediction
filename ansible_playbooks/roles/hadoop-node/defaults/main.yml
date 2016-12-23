@@ -1,0 +1,7 @@
+---
+
+hadoop_version: 2.6.4
+hadoop_download_url: 'http://apache.claz.org/hadoop/common/hadoop-2.6.4/hadoop-2.6.4.tar.gz'
+hadoop_home: /usr/local/hadoop
+is_master: False
+is_slave: False

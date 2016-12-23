@@ -1,0 +1,79 @@
+---
+
+- name: Download spark pre-built package
+  get_url: url={{ spark_download_url }} dest="/home/ubuntu/"
+
+- name: Remove existing spark directory
+  file: path={{ item }} state=absent
+  with_items:
+    - '{{ spark_home }}-{{ spark_version }}'
+    - '{{ spark_home }}'
+
+- name: Extract spark archive
+  unarchive: copy=no src="/home/ubuntu/spark-{{ spark_version }}.tgz" dest="/usr/local/" owner="ubuntu"
+
+- name: Move the spark directory to spark home
+  command: mv "{{ spark_home }}-{{ spark_version }}" {{ spark_home }}
+
+- name: Add spark to path
+  lineinfile:
+    dest=/home/ubuntu/.profile
+    state=present
+    line="{{ item }}"
+  with_items:
+    - 'export SPARK_HOME="{{ spark_home }}"'
+    - 'export PATH="$SPARK_HOME/bin":$PATH'
+
+# master
+- name: Spark master environment setup script
+  template: src=conf/spark-env-master.sh.j2 dest="{{ spark_home }}/conf/spark-env.sh" owner=ubuntu
+  when: (is_master | bool)
+
+- name: Spark master configuration setup for event logging
+  template: src=conf/spark-defaults.conf.j2 dest="{{ spark_home }}/conf/spark-defaults.conf" owner=ubuntu
+  when: (is_master | bool)
+
+- name: Spark slave environment setup script
+  template: src=conf/spark-env-slave.sh.j2 dest="{{ spark_home }}/conf/spark-env.sh" owner=ubuntu
+  when: (is_slave | bool)
+
+#- name: Create event logging directory for spark from master
+#  become_user: ubuntu
+#  command: '{{ hadoop_home }}/bin/hadoop fs -mkdir -p /event-logging'
+#  when: (is_master | bool)
+
+- name: Change ownership of spark Home directory
+  file: dest={{ spark_home }} owner=ubuntu mode=0775 recurse=yes
+
+- name: Stop Spark Cluster from Master
+  become_user: ubuntu
+  command: '{{ spark_home }}/sbin/stop-all.sh'
+  when: (is_master | bool)
+
+- name: Start spark cluster from master
+  become_user: ubuntu
+  command: '{{ spark_home }}/sbin/start-all.sh'
+  when: (is_master | bool)
+
+- name: Stop spark history server from master
+  become_user: ubuntu
+  command: '{{ spark_home }}/sbin/stop-history-server.sh'
+  when: (is_master | bool)
+
+- name: Start spark history server
+  become: yes
+  become_user: ubuntu
+  command: '{{ spark_home }}/sbin/start-history-server.sh'
+  when: (is_master | bool)
+
+- name: Stop spark slave
+  become: yes
+  become_user: ubuntu
+  command: '{{ spark_home }}/sbin/stop-slave.sh spark://{{ hostvars.localhost.hadoop_master.public_ip }}:7077'
+  when: (is_slave | bool)
+
+- name: Start spark slave
+  become: yes
+  become_user: ubuntu
+  command: '{{ spark_home }}/sbin/start-slave.sh spark://{{ hostvars.localhost.hadoop_master.public_ip }}:7077'
+  when: (is_slave | bool)

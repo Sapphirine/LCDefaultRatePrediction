@@ -1,0 +1,20 @@
+---
+
+- name: Delete local temporary key for master node if present
+  file:  path=./id_rsa.tmp state=absent
+
+- name: Download public key of Hadoop Master
+  fetch: src=/home/ubuntu/.ssh/id_rsa.pub dest=./id_rsa.tmp flat=yes
+
+- name: Modify hosts file in master to add the slaves
+  lineinfile:
+    dest=/etc/hosts
+    state=present
+    line='{{ item.public_dns_name }}    {{ item.private_dns_name.split(".")[0] }}'
+  with_items: '{{ hostvars.localhost.hadoop_slave }}'
+
+- name: Add slaves to hadoop master
+  template: src=conf/slaves.j2 dest="{{ hadoop_home }}/etc/hadoop/slaves" owner=ubuntu
+
+- name: Add slaves to spark master
+  template: src=conf/slaves.j2 dest="{{ spark_home }}/conf/slaves" owner=ubuntu

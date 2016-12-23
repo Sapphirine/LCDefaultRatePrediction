@@ -1,0 +1,132 @@
+---
+# tasks file for setup_hadoop
+# master
+- name: Delete existing public keys for ubuntu
+  become_user: ubuntu
+  shell: "rm -rf /home/ubuntu/.ssh/id_rsa*"
+  when: (is_master | bool)
+
+# master
+- name: Generate RSA key for ubuntu
+  become_user: ubuntu
+  shell: 'ssh-keygen -f /home/ubuntu/.ssh/id_rsa -t rsa -P ""'
+  when: (is_master | bool)
+
+# master
+- name: Remove known hosts file
+  become_user: ubuntu
+  file: path='/home/ubuntu/.ssh/known_hosts' state=absent
+  when: (is_master | bool)
+
+# master
+- name: Add ssh key to authorized keys
+  shell: "cat /home/ubuntu/.ssh/id_rsa.pub >> /home/ubuntu/.ssh/authorized_keys"
+  when: (is_master | bool)
+
+# slave
+- name: Copy master public key file
+  copy: src=./id_rsa.tmp dest=/home/ubuntu/
+  when: (is_slave | bool)
+
+# slave
+- name: Add master public key to slave authorized keys
+  shell: "cat /home/ubuntu/id_rsa.tmp >> /home/ubuntu/.ssh/authorized_keys"
+  when: (is_slave | bool)
+
+- name: Download Hadoop pre-built package
+  get_url: url={{ hadoop_download_url }} dest="/home/ubuntu/"
+
+- name: Remove Hadoop directory
+  file: path={{ item }} state=absent
+  with_items:
+    - "{{ hadoop_home }}-{{ hadoop_version }}"
+    - "{{ hadoop_home }}"
+
+- name: Extract Hadoop archive
+  unarchive: copy=no src="/home/ubuntu/hadoop-{{ hadoop_version }}.tar.gz" dest="/usr/local/" owner="ubuntu"
+
+- name: Move the Hadoop directory to hadoop home
+  command: mv "/usr/local/hadoop-{{ hadoop_version }}" {{ hadoop_home }}
+
+- name: Add ananconda to path
+  lineinfile:
+    dest=/home/ubuntu/.profile
+    state=present
+    line="{{ item }}"
+  with_items:
+    - "export JAVA_HOME=/usr"
+    - "export HADOOP_HOME={{ hadoop_home }}"
+    - "export PATH=$PATH:$HADOOP_HOME/bin"
+    - "export HADOOP_CONF_DIR={{ hadoop_home }}/etc/hadoop"
+    - "export PYSPARK_PYTHON=/home/ubuntu/venvs/iris/bin/python"
+
+# master
+- name: Modify hosts file in master to add the slaves
+  lineinfile:
+    dest: '/etc/hosts'
+    state: present
+    line: '{{ hostvars.localhost.hadoop_master.public_dns_name }}    {{ hostvars.localhost.hadoop_master.private_dns_name.split(".")[0] }}'
+  when: (is_master | bool)
+
+- name: config Hadoop env
+  template: src=conf/hadoop-env.sh.j2 dest={{ hadoop_home }}/etc/hadoop/hadoop-env.sh mode="u=rwx,g=rx,o=rx"
+
+- name: config Hadoop core-site.xml
+  template: src=conf/core-site.xml.j2 dest="{{ hadoop_home }}/etc/hadoop/core-site.xml" owner=ubuntu
+
+- name: config Hadoop yarn-site.xml
+  template: src=conf/yarn-site.xml.j2 dest="{{ hadoop_home }}/etc/hadoop/yarn-site.xml" owner=ubuntu
+
+- name: config Hadoop mapred-site.xml
+  template: src=conf/mapred-site.xml.j2 dest="{{ hadoop_home }}/etc/hadoop/mapred-site.xml" owner=ubuntu
+
+- name: config Hadoop hdfs-site.xml
+  template: src=conf/hdfs-site.xml.j2 dest="{{ hadoop_home }}/etc/hadoop/hdfs-site.xml" owner=ubuntu
+
+# master
+- name: config Hadoop master
+  template: src=conf/masters.j2 dest="{{ hadoop_home }}/etc/hadoop/masters" owner=ubuntu
+  when: (is_master | bool)
+
+- name: Create hadoop data dir
+  file: path=/usr/local/hadoop/hadoop_data/hdfs/node state=directory mode=0755 owner=ubuntu
+
+- name: Change ownership of hadoop directory
+  file: dest={{ hadoop_home }} owner=ubuntu mode=0775 recurse=yes
+
+- name: Format Hadoop namenodes
+  become_user: ubuntu
+  command: "{{ hadoop_home }}/bin/hadoop namenode -format"
+  when: (is_master | bool)
+
+- name: Attempt to stop Hadoop cluster
+  become_user: ubuntu
+  expect:
+    command: "{{ hadoop_home }}/sbin/stop-dfs.sh"
+    responses:
+      (?i)Are you sure you want to continue connecting (yes/no)? : 'yes'
+  when: (is_master | bool)
+
+- name: Attempt to start Hadoop cluster
+  become_user: ubuntu
+  expect:
+    command: "{{ hadoop_home }}/sbin/start-dfs.sh"
+    responses:
+      (?i)Are you sure you want to continue connecting (yes/no)? : 'yes'
+  when: (is_master | bool)
+
+- name: Attempt to stop Hadoop slave
+  become_user: ubuntu
+  expect:
+    command: "{{ hadoop_home }}/sbin/hadoop-daemon.sh stop datanode"
+    responses:
+      (?i)Are you sure you want to continue connecting (yes/no)? : 'yes'
+  when: (is_slave | bool)
+
+- name: Attempt to start Hadoop slave
+  become_user: ubuntu
+  expect:
+    command: "{{ hadoop_home }}/sbin/hadoop-daemon.sh start datanode"
+    responses:
+      (?i)Are you sure you want to continue connecting (yes/no)? : 'yes'
+  when: (is_slave | bool)

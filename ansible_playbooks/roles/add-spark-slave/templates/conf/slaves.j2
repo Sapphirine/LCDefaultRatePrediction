@@ -1,0 +1,5 @@
+# Hadoop datanode list
+
+{% for host in hostvars.localhost.hadoop_slave %}
+{{ host.public_ip }}
+{% endfor %}

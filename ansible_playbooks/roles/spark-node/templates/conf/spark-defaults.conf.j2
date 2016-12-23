@@ -1,0 +1,3 @@
+spark.eventLog.enabled             true
+spark.eventLog.dir                 hdfs://{{ hostvars.localhost.hadoop_master.private_ip }}:9000/event-logging
+spark.history.fs.logDirectory      hdfs://{{ hostvars.localhost.hadoop_master.private_ip }}:9000/event-logging

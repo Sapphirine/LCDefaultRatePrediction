@@ -1,0 +1,67 @@
+---
+# see docs for full information about this module
+# http://docs.ansible.com/ansible/ec2_module.html
+
+- name: Include Spark Variables
+  include_vars: roles/build-instances/vars/spark.yml
+
+- name: Create Ubuntu ec2 instance Servers if they do not exist
+  ec2:
+    instance_type: '{{ instance_type }}'
+    image: '{{ ami_id }}'
+    zone: '{{ zone }}'
+    region: '{{ region }}'
+    keypair: '{{ keyname }}'
+    instance_tags:
+      Name: '{{ Name }}'
+      Env: '{{ Env }}'
+    assign_public_ip: yes
+    private_ip: '{{ private_ip }}'
+    vpc_subnet_id: '{{ vpc_subnet_id }}'
+    group: '{{ group }}'
+    exact_count: '{{ cluster_group_count }}'
+    # identificationtags allow us to keep an exact_count of servers in aws
+    count_tag:
+      Name: '{{ Name }}'
+      Env: '{{ Env }}'
+    volumes:
+      -  device_name: '{{ volume_device_name }}'
+         volume_size: '{{ volume_size }}'
+         delete_on_termination: true
+    wait: yes
+  register: spark_instances
+
+# ansible specific tasks for setting hosts to allow for dynamic playbook runs
+# http://docs.ansible.com/ansible/add_host_module.html
+- name: Add ec2 master hosts to in memory group
+  add_host:
+    hostname: '{{ item.public_ip }}'
+    groups: hadoop_master_ec2_instances
+  when: (is_master | bool)
+  with_items: '{{ spark_instances.tagged_instances }}'
+
+- name: Hadoop master variable
+  set_fact:
+    hadoop_master: '{{ item }}'
+  when: (is_master | bool)
+  with_items: '{{ spark_instances.tagged_instances }}'
+
+- name: Add ec2 slave hosts to in memory group
+  add_host:
+    hostname: '{{ item.public_ip }}'
+    groups: hadoop_slave_ec2_instances
+  when: (is_slave | bool)
+  with_items: '{{ spark_instances.tagged_instances }}'
+
+- name: Hadoop slaves variable
+  set_fact:
+    hadoop_slave: '{{ spark_instances.tagged_instances | selectattr("tags.Name", "equalto", "Spark-Slave") | selectattr("tags.Env", "equalto", Env) | list }}'
+
+# default time out is 300 seconds
+- name: Wait for SSH to come up
+  become_user: ubuntu
+  wait_for:
+    host: '{{ item.public_ip  }}'
+    port: 22
+    state: started
+  with_items: '{{ spark_instances.tagged_instances }}'

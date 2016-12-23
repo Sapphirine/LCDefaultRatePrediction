@@ -1,0 +1,4 @@
+---
+- name: Build Spark Instance(s)
+  include: build-spark-instances.yml
+  when: (build_spark_instances | bool)

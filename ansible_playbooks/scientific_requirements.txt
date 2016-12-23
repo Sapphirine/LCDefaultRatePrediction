@@ -1,0 +1,6 @@
+Cython==0.24
+numpy==1.11.1
+pandas==0.19.0
+scipy==0.17.0		# Install scipy before scikit-learn.
+scikit-learn==0.18
+xlrd==0.9.4

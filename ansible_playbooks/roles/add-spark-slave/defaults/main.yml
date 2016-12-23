@@ -1,0 +1,4 @@
+---
+
+spark_home: /usr/local/spark
+hadoop_home: /usr/local/hadoop

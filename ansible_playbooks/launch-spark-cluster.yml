@@ -1,0 +1,54 @@
+---
+# This ansible playbook is used to launch a Apache Spark cluster from scratch.
+# As part of this playbook, we provision a master instance and install the software
+# and python dependencies required to run python code on a Spark cluster.
+# We also launch slaves as part of this playbook.
+#
+# The number of ec2 machines provisioned is specified by `cluster_group_count` variable.
+# For provisioning a master node, we should always specify it as 1.
+#
+# The number of slaves to be launched is also controlled by `cluster_group_count` variable
+# in the launch-spark-slaves playbook. Please modify that variable to launch `n` slaves.
+#
+# The name of the master node identifies the Master node in a specific environment.
+# In order to specify different environments (e.g. production, development, test), please
+# update the `Env` variable in spark.yml located in deploy/ansible/roles/build-instances/vars directory.
+#
+# To launch this script, traverse to deploy/ansible directory and run the following command
+#
+# ```
+# ansible-playbook --private-key=<private_key_file> launch-spark-cluster.yml
+# ```
+#
+# Note: Please make sure to update the provisioning details in spark.yml located in
+#       deploy/ansible/roles/build-instances/vars directory
+#
+
+- name: Provision master node
+  hosts: localhost
+  gather_facts: true
+  connection: local
+  vars:
+    Name: 'Spark-Master'
+    build_spark_instances: true
+    cluster_group_count: 1
+    is_master: True
+    is_slave: False
+    instance_type: 't2.medium'
+  roles:
+    - build-instances
+
+- name: Setup and launch hadoop master node
+  hosts: hadoop_master_ec2_instances
+  gather_facts: true
+  connection: ssh
+  remote_user: ubuntu
+  become: yes
+  vars:
+    is_master: True
+  roles:
+    - bootstrap-spark-node
+    - hadoop-node
+    - spark-node
+
+- include: launch-spark-slaves.yml

@@ -1,0 +1,29 @@
+---
+# ubuntu 14.04 ami
+ami_id: ami-fce3c696
+# default zone for our infrastructure
+zone: us-east-1a
+# default region for our infrastructure
+region: us-east-1
+# pem file used for application and assests that we interact with and test often
+keyname: Nitesh
+# minimum instance type needed for Spark slave nodes
+# Subnet name
+network: vpc-11ea7575
+# Subnet id
+vpc_subnet_id: subnet-7ea96108
+# Security group for spark
+group: default
+# private ip of test server
+private_ip: null
+# public ip
+public_ip: null
+# volume size so we don't run out of space when docker images build up and we are slow on cleanup
+volume_size: 20
+# default for volume instance
+volume_device_name: /dev/sda1
+# default for volume type for instance
+volume_type: root
+
+# aws tags to attach to the instance for identification purposes
+Env: spark

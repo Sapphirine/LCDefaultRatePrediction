@@ -1,0 +1,8 @@
+---
+
+spark_version: 2.0.2-bin-hadoop2.6
+spark_download_url: 'http://d3kbcqa49mib13.cloudfront.net/spark-{{ spark_version }}.tgz'
+spark_home: /usr/local/spark
+hadoop_home: /usr/local/hadoop
+is_master: False
+is_slave: False

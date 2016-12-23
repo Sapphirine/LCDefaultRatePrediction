@@ -1,0 +1,98 @@
+---
+# This ansible playbook is used to launch Apache Spark slaves and attach them to the master.
+# The master node is identified by the tag:Name and tag:Env of the master node.
+# This playbook helps us to scale up and scale down a spark environment.
+#
+# As part of this playbook, we provision a slave instance and install the software
+# and python dependencies required to run python code on a Spark cluster.
+#
+# The number of slaves to be launched is also controlled by `cluster_group_count` variable in
+# `Provision slave nodes` task. Please modify that variable to launch `n` slaves.
+#
+# In order to specify different environments (e.g. production, development, test), please
+# update the `Env` variable in spark.yml located in deploy/ansible/roles/build-instances/vars directory.
+#
+# To launch this script, traverse to deploy/ansible directory and run the following command
+#
+# ```
+# ansible-playbook --private-key=<private_key_file> launch-spark-slave.yml
+# ```
+#
+# Note: Please make sure to update the provisioning details in spark.yml located in
+#       deploy/ansible/roles/build-instances/vars directory accordingly.
+#
+
+- name: Gather facts about master node
+  hosts: localhost
+  gather_facts: true
+  connection: local
+  tasks:
+  - name: Gather master node facts
+    ec2_remote_facts:
+      filters:
+        'tag:Name': 'Spark-Master'
+        'tag:Env': 'spark'
+      region: "us-east-1"
+    register: master_node
+  - name: Create a host group for master
+    add_host:
+      hostname: '{{ item.public_ip_address }}'
+      groups: hadoop_master_ec2_instances
+    with_items: '{{ master_node.instances }}'
+  - name: Hadoop master variable
+    set_fact:
+      hadoop_master: '{{ item }}'
+    with_items: '{{ master_node.instances }}'
+  - set_fact:
+      hadoop_master: '{{ hadoop_master | combine( {"public_ip": hadoop_master.public_ip_address} ) }}'
+  - set_fact:
+      hadoop_master: '{{ hadoop_master | combine( {"private_ip": hadoop_master.private_ip_address} ) }}'
+
+- name: Provision slave nodes
+  hosts: localhost
+  gather_facts: true
+  connection: local
+  vars:
+    Name: 'Spark-Slave'
+    build_spark_instances: true
+    cluster_group_count: 2
+    is_master: False
+    is_slave: True
+    instance_type: 't2.medium'
+  roles:
+    - build-instances
+
+
+- name: Add slave nodes
+  hosts: hadoop_master_ec2_instances
+  gather_facts: true
+  connection: ssh
+  become: yes
+  remote_user: ubuntu
+  vars:
+    hadoop_home: '/usr/local/hadoop'
+  roles:
+    - add-spark-slave
+
+- name: Setup hadoop slaves
+  hosts: hadoop_slave_ec2_instances
+  gather_facts: true
+  connection: ssh
+  become: yes
+  remote_user: ubuntu
+  vars:
+    is_slave: True
+  roles:
+    - bootstrap-spark-node
+    - hadoop-node
+
+- name: Setup spark slaves
+  hosts: hadoop_slave_ec2_instances
+  gather_facts: true
+  connection: ssh
+  become: yes
+  remote_user: ubuntu
+  vars:
+    is_slave: True
+  roles:
+    - spark-node
