@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Big Data Analytics</title>
+<script src='https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js'></script>
+<style>
+    /* Main components */
+      body {
+        font-family: 'Open Sans', 'Helvetica', sans-serif;
+        /*letter-spacing: -1px;*/
+      }
+
+      svg {
+        display: block;
+        margin: auto;
+      }
+
+      h1 {
+        text-align: center;
+        font-weight: normal;
+        margin: 25px auto 5px auto;
+      }
+
+      h2 {
+        background-color: #d3d3d3;
+        color: #fff;
+        width: 70%;
+        min-width: ;
+        padding: 10px 20px 10px 20px;
+        margin: 20px auto 20px auto;
+      }
+
+      h3 {
+        margin: 15px auto 7px auto;
+        text-align: center;
+      }
+
+      /* divs */
+      div.main {
+        margin: auto;
+        max-width: 1300px;
+      }
+
+      div.subtitle {
+          text-align: center;
+      }
+
+      div.footer {
+        clear: both;
+        margin-top: 50px;
+        position: relative;
+        bottom: 25px;
+        right: 25px;
+        text-align: right;
+        font-size: 80%;
+        color: grey;
+      }
+
+      p.infobox {
+        visibility: hidden;
+        text-align: center;
+        height: 12px;
+        }
+      p.description {
+        font-size: 80%;
+        max-width: 900px;
+        margin: 10px auto 10px auto;
+      }
+      p.sidenote {
+        font-size: 70%;
+        color: grey;
+        max-width: 900px;
+        margin: 5px auto 0px auto;
+      }
+
+      div.source {
+        clear: both;
+        padding-top: 20px;
+      }
+
+      div.chart {
+        display: inline-block;
+      }
+
+      div.tooltip {
+        position: absolute;
+        visibility: hidden;
+        font-size: 75%;
+        color: #333333;
+        background-color: #e6e6e6;
+        opacity: .95;
+        padding: 5px;
+      }
+
+      div#map {
+        margin: 10px auto 10px auto;
+      }
+
+      /* Misc */
+      .label {
+        font-family: sans-serif;
+      font-size: 80%;
+      fill: #505050;
+      }
+
+      .title {
+        font-weight: bold;
+      }
+
+      .axis text {
+        font-family: sans-serif;
+        font-size: 11px;
+        fill: #505050;
+      }
+
+      .axis path, line {
+        fill: none;
+        stroke: grey;
+        shape-rendering: crispEdges;
+      }
+
+      .float-label {
+        font-size: 70%;
+        fill: #7F7F7F;
+      }
+
+      hr {
+        border: 0;
+        height: 0;
+        border-top: 1px solid #e0e0e0;
+        margin-top: 20px;
+        width: 70%;
+      }
+    </style>
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js'></script>  
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,600,700,300' rel='stylesheet' type='text/css'>
+</head>
+<body>
+  <h1>P2P Loan Default Rate Prediction</h1>
+    <div class="subtitle">Aman Chahar, Arushi Arora, Nitesh Chauhan</div>
+    <hr />
+    <div class="main">
+        <p class="description"><em>Hover around.</em></p>
+        <div id="chart"></div>
+        <div class="tooltip"></div>
+    </div>
+  <script src="h1.js"></script>
+</body>
+</html>

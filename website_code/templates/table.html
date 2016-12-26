@@ -1,0 +1,53 @@
+{% extends 'layout.html' %}
+{% block content %}
+
+<div class="container">
+  <h2>Pool of Loans</h2>
+  <p>Grade: {{ grade }}</p>                                                                                      
+  <p>Term: {{ term }}</p>                                                                                      
+  <div class="table-responsive"> 
+      {% if loans %}        
+      <table class="table table-striped">
+        <thead class="thead-inverse">
+          <tr>
+            <th>Loan Id</th>
+            <th>Loan Amount</th>
+            <th>Term</th>
+            <th>Interest Rate</th>
+            <th>Grade</th>
+            <th>Annual Income</th>
+            <th>Loan Issue Date</th>
+            <th>Purpose</th>
+            <th>State Address</th>
+            <th>Debt to Income Ratio</th>
+            <th>Application Type</th>
+            <th>Loan Status</th>
+          </tr>
+        </thead>
+        <tbody>
+        {% for loan in loans %}
+          <tr>
+            <td>{{ loan.id }}</td>
+            <td>{{ loan.loan_amnt }}</td>
+            <td>{{ loan.term }}</td>
+            <td>{{ loan.int_rate }}</td>  
+            <td>{{ loan.grade }}</td>
+            <td>{{ loan.annual_inc }}</td>
+            <td>{{ loan.issue_d }}</td>
+            <td>{{ loan.purpose }}</td>
+            <td>{{ loan.addr_state }}</td>
+            <td>{{ loan.dti }}</td>
+            <td>{{ loan.application_type }}</td>
+            <td>{{ loan.loan_status }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      
+      {% endif %}
+  </div>
+
+</div>
+
+{% endblock %}
+

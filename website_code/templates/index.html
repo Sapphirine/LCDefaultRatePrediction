@@ -1,0 +1,30 @@
+{% extends 'layout.html' %}
+{% block content %}
+<h1>Big Data Analytics</h1>
+<p>We have a total of {{ count }} records </p>
+<form name="sendKeyword" id="searchForm" action="/grades" method="POST" novalidate>
+    <div class="form-group">
+        <label for="gradeSelect">Select Loan Grade: </label>
+        <select name ="grade" id="gradeSelect">
+            <option value = "A">Grade A</option>
+            <option value = "B">Grade B</option>
+            <option value = "C">Grade C</option>
+            <option value = "D">Grade D</option>
+            <option value = "E">Grade E</option>
+            <option value = "F">Grade F</option>
+            <option value = "G">Grade G</option>
+        </select>
+    </div>
+    <div class="form-group">
+        <label for="termSelect">Select Loan Term: </label>
+            <select name ="term" id="termSelect">
+                <option value = "36 months">36 months</option>
+                <option value = "60 months">60 months</option>
+            </select>
+    </div>
+    <button type="submit" class="btn btn-primary">Submit</button>
+    <!-- <input type="submit" value="Submit"> -->
+</form>
+
+
+{% endblock %}
